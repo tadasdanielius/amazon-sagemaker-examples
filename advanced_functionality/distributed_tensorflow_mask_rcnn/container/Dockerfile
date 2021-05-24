@@ -13,14 +13,9 @@ RUN pip install pycocotools==2.0.1
 RUN pip install matplotlib==3.0.3
 RUN pip install markdown==3.1
 
-RUN git clone https://github.com/tensorpack/tensorpack.git /tensorpack
-RUN cd /tensorpack && git fetch origin db541e8ec9edeeb12f8dcc79f3ca835412d282e1 
-RUN cd /tensorpack && git reset --hard db541e8ec9edeeb12f8dcc79f3ca835412d282e1 
+RUN git clone https://github.com/tadasdanielius/tensorpack.git /tensorpack
+RUN cd /tensorpack && git fetch origin faeaaa78dd92123c54d78e1e14e048201678563f 
+RUN cd /tensorpack && git reset --hard faeaaa78dd92123c54d78e1e14e048201678563f 
 RUN pip install -e /tensorpack  
-
-##########################################################################################
-# SageMaker requirements
-##########################################################################################
-COPY resources/train.py /opt/ml/code/train.py
 
 ENV SAGEMAKER_PROGRAM train.py
