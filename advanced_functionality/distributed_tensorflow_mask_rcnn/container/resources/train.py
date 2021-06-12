@@ -132,6 +132,39 @@ def copy_files(src, dest):
             shutil.copy(path, dest)
 
 
+def apply_updates():
+    print('About to apply patches from remote repo.')
+    cmd = '/opt/ml/code/patch.sh'
+    try:
+        process = subprocess.Popen(
+            cmd,
+            encoding="utf-8",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+
+        while True:
+            if process.poll() != None:
+                break
+
+            output = process.stdout.readline()
+            if output:
+                print(output.strip())
+
+        exitcode = process.poll()
+        print(f"patching exit code:{exitcode}")
+        exitcode = 0
+    except Exception as e:
+        print("patching exception occured", file=sys.stderr)
+        print(str(e), file=sys.stderr)
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+    print('Patched!')
+
+
+
 def train():
     import pprint
 
@@ -248,6 +281,9 @@ def train():
     numprocesses = len(all_hosts) * int(gpus_per_host)
 
     steps_per_epoch = int(images_per_epoch / numprocesses)
+    train_data_str = f'"{data_train}"'
+    train_val_str = f'"{data_val}"'
+
 
     mpirun_cmd = f"""HOROVOD_CYCLE_TIME={horovod_cycle_time} \\
 HOROVOD_FUSION_THRESHOLD={horovod_fusion_threshold} \\
@@ -275,8 +311,8 @@ MODE_MASK={mode_mask} \
 BACKBONE.RESNET_NUM_BLOCKS='{resnet_num_blocks}' \
 BACKBONE.WEIGHTS={train_data_dir}/pretrained-models/{backbone_weights} \
 BACKBONE.NORM={batch_norm} \
-DATA.TRAIN='["{data_train}"]' \
-DATA.VAL='("{data_val}",)' \
+DATA.TRAIN={train_data_str} \
+DATA.VAL={train_val_str} \
 TRAIN.STEPS_PER_EPOCH={steps_per_epoch} \
 TRAIN.EVAL_PERIOD={eval_period} \
 TRAIN.LR_SCHEDULE='{lr_schedule}' \
@@ -301,7 +337,7 @@ TRAINER=horovod"""
             cwd="/tensorpack",
             shell=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
         )
 
         while True:
@@ -329,4 +365,6 @@ TRAINER=horovod"""
 
 
 if __name__ == "__main__":
+    print('!!!!!!! version 1.4')
+    apply_updates()
     train()
